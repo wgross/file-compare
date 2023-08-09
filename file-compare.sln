@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{511665F4-0143-45F6-811F-A849CFDF153C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileCompare.Service", "src\FileCompare.Service\FileCompare.Service.csproj", "{370EF8BE-F140-4B82-93BF-60257970FEC5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileCompare.Client", "src\FileCompare.Client\FileCompare.Client.csproj", "{538B0FB0-4D24-4432-817C-3F28A3AB03DB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileCompare.Dto", "src\FileCompare.Dto\FileCompare.Dto.csproj", "{679DDA0F-E64A-424C-ADEB-6984AD4E63E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileCompare.Persistence", "src\FileCompare.Persistence\FileCompare.Persistence.csproj", "{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileCompare.Model", "src\FileCompare.Model\FileCompare.Model.csproj", "{1F23DAAB-117F-4A67-8712-9D10383EC437}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{4DA6AAE4-1C5B-426A-AD42-F6A2A9C560D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileCompare.Service.Test", "test\FileCompare.Service.Test\FileCompare.Service.Test.csproj", "{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{370EF8BE-F140-4B82-93BF-60257970FEC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{370EF8BE-F140-4B82-93BF-60257970FEC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{370EF8BE-F140-4B82-93BF-60257970FEC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{370EF8BE-F140-4B82-93BF-60257970FEC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{538B0FB0-4D24-4432-817C-3F28A3AB03DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{538B0FB0-4D24-4432-817C-3F28A3AB03DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{538B0FB0-4D24-4432-817C-3F28A3AB03DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{538B0FB0-4D24-4432-817C-3F28A3AB03DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{679DDA0F-E64A-424C-ADEB-6984AD4E63E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{679DDA0F-E64A-424C-ADEB-6984AD4E63E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{679DDA0F-E64A-424C-ADEB-6984AD4E63E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{679DDA0F-E64A-424C-ADEB-6984AD4E63E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F23DAAB-117F-4A67-8712-9D10383EC437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F23DAAB-117F-4A67-8712-9D10383EC437}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F23DAAB-117F-4A67-8712-9D10383EC437}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F23DAAB-117F-4A67-8712-9D10383EC437}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{370EF8BE-F140-4B82-93BF-60257970FEC5} = {511665F4-0143-45F6-811F-A849CFDF153C}
+		{538B0FB0-4D24-4432-817C-3F28A3AB03DB} = {511665F4-0143-45F6-811F-A849CFDF153C}
+		{679DDA0F-E64A-424C-ADEB-6984AD4E63E0} = {511665F4-0143-45F6-811F-A849CFDF153C}
+		{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271} = {511665F4-0143-45F6-811F-A849CFDF153C}
+		{1F23DAAB-117F-4A67-8712-9D10383EC437} = {511665F4-0143-45F6-811F-A849CFDF153C}
+		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E} = {4DA6AAE4-1C5B-426A-AD42-F6A2A9C560D5}
+	EndGlobalSection
+EndGlobal
