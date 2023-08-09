@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FileCompare.Client\FileCompare.Client.csproj" />
     <ProjectReference Include="..\..\src\FileCompare.Service\FileCompare.Service.csproj" />
   </ItemGroup>
 

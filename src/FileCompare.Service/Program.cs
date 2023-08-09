@@ -3,16 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder();
 
-//builder.Services.AddDbContext<FileDbContext>(options =>
-//{
-//    var connectionString = new SqliteConnectionStringBuilder();
-//    connectionString.DataSource = @"c:\temp\files.db";
-
-//    options.UseSqlite(connectionString.ConnectionString);
-//});
-
-//builder.Services.AddDbContext<FileDbContext>(options => InMemoryDbContextOptionsBuilder.Default.CreateOptions(options));
-
 builder.Services.AddDbContext<FileDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -20,7 +10,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -35,9 +25,10 @@ app.MapGetFiles();
 app.MapGetDifferences();
 app.MapAddFiles();
 
-var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<FileDbContext>();
-
-context.Database.EnsureCreated();
+var context = app.Services
+    .CreateScope().ServiceProvider
+    .GetRequiredService<FileDbContext>()
+    .Database.EnsureCreated();
 
 app.Run();
 
