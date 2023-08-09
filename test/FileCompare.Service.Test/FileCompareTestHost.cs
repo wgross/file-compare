@@ -6,15 +6,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FileCompare.Service.Test;
 
-public class FileCompareTestHostFactory : WebApplicationFactory<Program>
+internal class FileCompareTestHostFactory : WebApplicationFactory<global::Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            var dbContext = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<FileDbContext>));
+            if (services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<FileDbContext>)) is { } registered)
+                services.Remove(registered);
 
-            services.Remove(dbContext!);
             services.AddDbContext<FileDbContext>(options => InMemoryDbContextOptionsBuilder.Default.CreateOptions(options));
         });
     }

@@ -7,7 +7,7 @@ using File = FileCompare.Model.File;
 
 public static class Endpoints
 {
-    #region Get Differences
+    #region Get Differences: GET /files/differences
 
     public static RouteHandlerBuilder MapGetDifferences(this WebApplication app) => app.MapGet("/files/differences", GetDifferences);
 
@@ -19,7 +19,7 @@ public static class Endpoints
             join s in dbx.FileStorages on fh.StorageId equals s.Id
             group fh by new { fh.FileId } into fhg
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() > 1
-            select new FileDifferenceDto(
+            select new FileComparisonDto(
                 fhg.First().File.Name,
                 fhg.First().File.FullName,
                 fhg.Select(fh => new FileHashDto(fh.Storage.Host, fh.Hash, fh.Updated)).ToArray());
@@ -27,9 +27,31 @@ public static class Endpoints
         return Results.Ok(fileHashGroups.ToArray());
     }
 
-    #endregion Get Differences
+    #endregion Get Differences: GET /files/differences
 
-    #region Get Files
+    #region GetDuplicates: GET /files/duplicates
+
+    public static RouteHandlerBuilder MapGetDuplicates(this WebApplication app) => app.MapGet("/files/duplicates", GetDuplicates);
+
+    private static IResult GetDuplicates([FromServices] FileDbContext dbx)
+    {
+        var fileHashGroups =
+            from fh in dbx.FileHashes
+            join f in dbx.Files on fh.FileId equals f.Id
+            join s in dbx.FileStorages on fh.StorageId equals s.Id
+            group fh by new { fh.FileId } into fhg
+            where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() == 1
+            select new FileComparisonDto(
+                fhg.First().File.Name,
+                fhg.First().File.FullName,
+                fhg.Select(fh => new FileHashDto(fh.Storage.Host, fh.Hash, fh.Updated)).ToArray());
+
+        return Results.Ok(fileHashGroups.ToArray());
+    }
+
+    #endregion GetDuplicates: GET /files/duplicates
+
+    #region Get Files: GET /files
 
     public static RouteHandlerBuilder MapGetFiles(this WebApplication app) => app.MapGet("/files", GetFiles);
 
@@ -46,9 +68,9 @@ public static class Endpoints
     private static IResult GetFiles([FromServices] FileDbContext dbx)
         => Results.Ok(AllFilesMapped(dbx).ToArray());
 
-    #endregion Get Files
+    #endregion Get Files: GET /files
 
-    #region Upsert files in database
+    #region Upsert files in database: POST /files
 
     public static RouteHandlerBuilder MapAddFiles(this WebApplication app) => app.MapPost("/files", AddFiles);
 
@@ -120,5 +142,5 @@ public static class Endpoints
         return existing;
     }
 
-    #endregion Upsert files in database
+    #endregion Upsert files in database: POST /files
 }

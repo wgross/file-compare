@@ -17,4 +17,8 @@
     <ProjectReference Include="..\FileCompare.Persistence\FileCompare.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="FileCompare.Service.Test" />
+  </ItemGroup>
+
 </Project>

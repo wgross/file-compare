@@ -23,6 +23,7 @@ app.Urls.Add("http://192.168.178.61:5000");
 app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
 app.MapGetFiles();
 app.MapGetDifferences();
+app.MapGetDuplicates();
 app.MapAddFiles();
 
 var context = app.Services
@@ -31,7 +32,3 @@ var context = app.Services
     .Database.EnsureCreated();
 
 app.Run();
-
-// for reference by integ test
-public partial class Program
-{ }

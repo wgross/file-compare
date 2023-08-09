@@ -72,4 +72,34 @@ public class FileCompareServiceTest
         Assert.Equal("host2", hash2.Host);
         Assert.Equal("hash2", hash2.Hash);
     }
+
+    [Fact]
+    public async Task Read_duplicates_from_db()
+    {
+        // ARRANGE
+        await this.client.AddFilesAsync(new[]
+        {
+            new FileDto("host1", "name", "fullname", "hash1"),
+            new FileDto("host2", "name", "fullname", "hash1")
+        });
+
+        // ACT
+        var result = await this.client.GetFileDuplicatesAsync();
+
+        // ASSERT
+        Assert.Single(result!);
+        var difference = result.First();
+
+        Assert.Equal("name", difference.Name);
+        Assert.Equal("fullname", difference.FullName);
+        Assert.Equal(2, difference.Hashes.Length);
+
+        var hash1 = difference.Hashes[0];
+        Assert.Equal("host1", hash1.Host);
+        Assert.Equal("hash1", hash1.Hash);
+
+        var hash2 = difference.Hashes[1];
+        Assert.Equal("host2", hash2.Host);
+        Assert.Equal("hash1", hash2.Hash);
+    }
 }
