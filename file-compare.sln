@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{4DA6AAE4-1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileCompare.Service.Test", "test\FileCompare.Service.Test\FileCompare.Service.Test.csproj", "{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileCompare.Console", "src\FileCompare.Console\FileCompare.Console.csproj", "{6004E6A8-C602-47CC-BFD3-F1D923E69D95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6004E6A8-C602-47CC-BFD3-F1D923E69D95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6004E6A8-C602-47CC-BFD3-F1D923E69D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6004E6A8-C602-47CC-BFD3-F1D923E69D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6004E6A8-C602-47CC-BFD3-F1D923E69D95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,5 +66,6 @@ Global
 		{6696ECB5-A0C9-4D85-81C3-2ADE5DB16271} = {511665F4-0143-45F6-811F-A849CFDF153C}
 		{1F23DAAB-117F-4A67-8712-9D10383EC437} = {511665F4-0143-45F6-811F-A849CFDF153C}
 		{7DC63998-DA8E-4317-A4DA-9C85D07EC91E} = {4DA6AAE4-1C5B-426A-AD42-F6A2A9C560D5}
+		{6004E6A8-C602-47CC-BFD3-F1D923E69D95} = {511665F4-0143-45F6-811F-A849CFDF153C}
 	EndGlobalSection
 EndGlobal
