@@ -55,18 +55,27 @@ public static class Endpoints
 
     public static RouteHandlerBuilder MapGetFiles(this WebApplication app) => app.MapGet("/files", GetFiles);
 
-    private static IEnumerable<File> AllFilesExpanded(FileDbContext dbx)
+    private static IQueryable<File> AllFilesExpanded(FileDbContext dbx)
         => dbx.Files.Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
 
-    private static IEnumerable<FileDto> AllFilesMapped([FromServices] FileDbContext dbx)
+    private static IEnumerable<FileDto> AllFilesMapped(FileDbContext dbx, [FromQuery] string path)
     {
-        foreach (var file in AllFilesExpanded(dbx))
-            foreach (var hash in file.Hashes)
-                yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
+        if (string.IsNullOrEmpty(path))
+        {
+            foreach (var file in AllFilesExpanded(dbx))
+                foreach (var hash in file.Hashes)
+                    yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
+        }
+        else
+        {
+            foreach (var file in AllFilesExpanded(dbx).Where(f => f.FullName.StartsWith(path)))
+                foreach (var hash in file.Hashes)
+                    yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
+        }
     }
 
-    private static IResult GetFiles([FromServices] FileDbContext dbx)
-        => Results.Ok(AllFilesMapped(dbx).ToArray());
+    private static IResult GetFiles([FromServices] FileDbContext dbx, [FromQuery] string? path)
+        => Results.Ok(AllFilesMapped(dbx, path).ToArray());
 
     #endregion Get Files: GET /files
 
@@ -116,20 +125,22 @@ public static class Endpoints
         return existing;
     }
 
-    private static File UpsertFile(FileDbContext dbx, FileDto file)
+    private static File UpsertFile(FileDbContext dbx, FileDto fileDto)
     {
-        var existing = dbx.Files.FirstOrDefault(fs => fs.FullName.Equals(file.FullName));
+        var existing = dbx.Files.FirstOrDefault(fs => fs.FullName.Equals(fileDto.FullName));
         if (existing is null)
         {
             existing = new File
             {
-                Name = file.Name,
-                FullName = file.FullName,
+                Name = fileDto.Name,
+                FullName = CleanupFullName(fileDto.FullName),
             };
             dbx.Files.Add(existing);
         }
         return existing;
     }
+
+    private static string CleanupFullName(string fullName) => fullName.Replace('\\', '/').Replace("//", "/").TrimStart('.').TrimStart('/');
 
     private static FileStorage UpsertFileStorage(FileDbContext dbx, FileDto file)
     {

@@ -1,5 +1,6 @@
 ﻿using FileCompare.Dto;
 using System.Net.Http.Json;
+using System.Web;
 
 namespace FileCompare.Client;
 
@@ -9,9 +10,11 @@ public class FileCompareClient
 
     public FileCompareClient(HttpClient httpClient) => this.httpClient = httpClient;
 
-    public async Task<FileDto[]> GetFilesAsync()
+    public async Task<FileDto[]> GetFilesAsync(string? path = null)
     {
-        var response = await this.httpClient.GetAsync("/files");
+        var response = string.IsNullOrEmpty(path)
+            ? await this.httpClient.GetAsync("/files")
+            : await this.httpClient.GetAsync($"/files?path={HttpUtility.UrlEncode(path)}");
 
         response.EnsureSuccessStatusCode();
 

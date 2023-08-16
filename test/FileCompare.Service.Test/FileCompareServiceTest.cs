@@ -27,11 +27,14 @@ public class FileCompareServiceTest
         Assert.Empty(result!);
     }
 
-    [Fact]
-    public async Task Add_file_and_read_again()
+    [Theory]
+    [InlineData("./fullname")]
+    [InlineData("fullname")]
+    [InlineData(".\\fullname")]
+    public async Task Add_file_and_read_again(string fullName)
     {
         // ACT
-        await this.client.AddFilesAsync(new[] { new FileDto("host", "name", "fullname", "hash") });
+        await this.client.AddFilesAsync(new[] { new FileDto("host", "name", fullName, "hash") });
 
         // ASSERT
         var result = await this.client.GetFilesAsync();
@@ -40,6 +43,29 @@ public class FileCompareServiceTest
         Assert.Equal("host", result.First().Host);
         Assert.Equal("name", result.First().Name);
         Assert.Equal("fullname", result.First().FullName);
+        Assert.Equal("hash", result.First().Hash);
+    }
+
+    [Theory]
+    [InlineData("./full/name")]
+    [InlineData("full\\name")]
+    [InlineData(".\\full\\name")]
+    public async Task Add_file_and_read_again_with_prefix(string fullName)
+    {
+        // ACT
+        await this.client.AddFilesAsync(new[]
+        {
+            new FileDto("host", "name", "nomatch", "hash"),
+            new FileDto("host", "name", fullName, "hash")
+        });
+
+        // ASSERT
+        var result = await this.client.GetFilesAsync(path: "full");
+
+        Assert.Single(result!);
+        Assert.Equal("host", result.First().Host);
+        Assert.Equal("name", result.First().Name);
+        Assert.Equal("full/name", result.First().FullName);
         Assert.Equal("hash", result.First().Hash);
     }
 
