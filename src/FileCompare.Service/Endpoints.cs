@@ -55,23 +55,16 @@ public static class Endpoints
 
     public static RouteHandlerBuilder MapGetFiles(this WebApplication app) => app.MapGet("/files", GetFiles);
 
-    private static IQueryable<File> AllFilesExpanded(FileDbContext dbx)
-        => dbx.Files.Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
+    private static IQueryable<File> AllFilesExpanded(FileDbContext dbx, string prefix)
+        => string.IsNullOrEmpty(prefix)
+        ? dbx.Files.Include(f => f.Hashes).ThenInclude(fh => fh.Storage)
+        : dbx.Files.Where(f => f.FullName.StartsWith(prefix)).Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
 
     private static IEnumerable<FileDto> AllFilesMapped(FileDbContext dbx, [FromQuery] string path)
     {
-        if (string.IsNullOrEmpty(path))
-        {
-            foreach (var file in AllFilesExpanded(dbx))
-                foreach (var hash in file.Hashes)
-                    yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
-        }
-        else
-        {
-            foreach (var file in AllFilesExpanded(dbx).Where(f => f.FullName.StartsWith(path)))
-                foreach (var hash in file.Hashes)
-                    yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
-        }
+        foreach (var file in AllFilesExpanded(dbx, path))
+            foreach (var hash in file.Hashes)
+                yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
     }
 
     private static IResult GetFiles([FromServices] FileDbContext dbx, [FromQuery] string? path)
