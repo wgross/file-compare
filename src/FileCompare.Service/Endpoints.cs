@@ -120,13 +120,14 @@ public static class Endpoints
 
     private static File UpsertFile(FileDbContext dbx, FileDto fileDto)
     {
-        var existing = dbx.Files.FirstOrDefault(fs => fs.FullName.Equals(fileDto.FullName));
+        var fullName = CleanupFullName(fileDto.FullName);
+        var existing = dbx.Files.FirstOrDefault(fs => fs.FullName.Equals(fullName));
         if (existing is null)
         {
             existing = new File
             {
                 Name = fileDto.Name,
-                FullName = CleanupFullName(fileDto.FullName),
+                FullName = fullName,
             };
             dbx.Files.Add(existing);
         }

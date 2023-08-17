@@ -2,16 +2,19 @@
 param(
     [Parameter(Mandatory, Position = 0)]
     [ValidateScript({ $_ | Test-Path -PathType Container })]
-    $Path
+    $Path,
+
+    [Parameter()]
+    $Uri = "http://192.168.178.61:5000/files"
 )
 process {
     $PWD | Write-Verbose
-    $PWD | Invoke-AtContainer { 
+    $PWD | fs-dirs\Invoke-AtContainer { 
         $files = @()
         $request = @{
-            Uri      = "http://localhost:5000/files"
-            Method   = "Post"
-            ContentType = "application/json"
+            Uri         = $Uri
+            Method      = "Post"
+            ContentType = "application/json;charset=UTF-16"
         }
 
         Get-ChildItem -Path $Path -File -Recurse | ForEach-Object {
@@ -19,7 +22,7 @@ process {
             $relativePath | Write-Verbose
  
             $file = [PSCustomObject]@{
-                Host     = $env:COMPUTERNAME
+                Host     = $env:ComputerName
                 Name     = $_.Name
                 FullName = $relativePath
                 Hash     = (Get-FileHash $_).Hash 
@@ -28,12 +31,34 @@ process {
             $files += $file
 
             if ($files.Length -eq 10) {
-                "Uploading.." | Write-Verbose
-                $request.Body = $files | ConvertTo-Json -Depth 10
-                Invoke-RestMethod @request
-                Write-Host $request.Body
-                $files = @()
+                try {
+                    "Uploading.." | Write-Verbose
+                    $request.Body = $files | ConvertTo-Json -Depth 10
+                    $request | ConvertTo-Json -Depth 3 | Write-Verbose
+                
+                    Invoke-RestMethod @request
+
+                    $files = @()
+                }
+                catch {
+                    $_ | Write-Error
+                    $request | ConvertTo-Json -Depth 3 | Write-Verbose
+                }
             }    
+        }
+
+        if ($files.Length -gt 0) {
+            try {
+                "Uploading remainder.." | Write-Verbose
+                $request.Body = $files | ConvertTo-Json -Depth 10
+                $request | ConvertTo-Json -Depth 3 | Write-Verbose
+                
+                Invoke-RestMethod @request
+            }
+            catch {
+                $_ | Write-Error
+                $request | ConvertTo-Json -Depth 3 | Write-Error
+            }
         }
     }
 }
