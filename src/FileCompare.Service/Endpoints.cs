@@ -22,7 +22,7 @@ public static class Endpoints
             select new FileComparisonDto(
                 fhg.First().File.Name,
                 fhg.First().File.FullName,
-                fhg.Select(fh => new FileHashDto(fh.Storage.Host, fh.Hash, fh.Updated)).ToArray());
+                fhg.Select(fh => new FileHashDto(fh.Storage.Host, fh.Hash, fh.Updated, fh.Length, fh.CreationTimeUtc, fh.LastAccessTimeUtc, fh.LastWriteTimeUtc)).ToArray());
 
         return Results.Ok(fileHashGroups.ToArray());
     }
@@ -44,7 +44,14 @@ public static class Endpoints
             select new FileComparisonDto(
                 fhg.First().File.Name,
                 fhg.First().File.FullName,
-                fhg.Select(fh => new FileHashDto(fh.Storage.Host, fh.Hash, fh.Updated)).ToArray());
+                fhg.Select(fh => new FileHashDto(
+                    fh.Storage.Host,
+                    fh.Hash,
+                    fh.Updated,
+                    fh.Length,
+                    fh.CreationTimeUtc,
+                    fh.LastAccessTimeUtc,
+                    fh.LastWriteTimeUtc)).ToArray());
 
         return Results.Ok(fileHashGroups.ToArray());
     }
@@ -64,7 +71,16 @@ public static class Endpoints
     {
         foreach (var file in AllFilesExpanded(dbx, path))
             foreach (var hash in file.Hashes)
-                yield return new FileDto(hash.Storage.Host, file.Name, file.FullName, hash.Hash);
+                yield return new FileDto(
+                    hash.Storage.Host,
+                    file.Name,
+                    file.FullName,
+                    hash.Hash,
+                    hash.Updated,
+                    hash.Length,
+                    hash.CreationTimeUtc,
+                    hash.LastAccessTimeUtc,
+                    hash.LastWriteTimeUtc);
     }
 
     private static IResult GetFiles([FromServices] FileDbContext dbx, [FromQuery] string? path)
@@ -96,7 +112,11 @@ public static class Endpoints
         if (fileHash.Hash != fileDto.Hash)
         {
             fileHash.Hash = fileDto.Hash;
-            fileHash.Updated = DateTime.Now;
+            fileHash.Updated = fileDto.Updated;
+            fileHash.Length = fileDto.Length;
+            fileHash.CreationTimeUtc = fileDto.CreationTimeUtc;
+            fileHash.LastAccessTimeUtc = fileDto.LastAccessTimeUtc;
+            fileHash.LastWriteTimeUtc = fileDto.LastWriteTimeUtc;
 
             await dbx.SaveChangesAsync();
         }

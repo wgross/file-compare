@@ -23,8 +23,17 @@ public class Program
         var filesInChunksOfTen = Directory.EnumerateFiles(path.FullName, "*", SearchOption.AllDirectories)
             .Select(x => new FileInfo(x))
             .Select(x => (File: x, Hash: HashFile(x)))
-            .Where(x => x is { Hash: { Ok: true } })
-            .Select(x => new FileDto(Environment.MachineName, x.File.Name, Path.GetRelativePath(Environment.CurrentDirectory, x.File.FullName), x.Hash.Hash))
+            .Where(x => x is { Hash: { Ok: true, Hash: not null } })
+            .Select(x => new FileDto(
+                Environment.MachineName, // host
+                x.File.Name,
+                Path.GetRelativePath(Environment.CurrentDirectory, x.File.FullName), // FulllName
+                x.Hash.Hash!, // Hash is null is excluded above
+                DateTime.UtcNow, // updated
+                x.File.Length,
+                x.File.CreationTimeUtc,
+                x.File.LastAccessTimeUtc,
+                x.File.LastWriteTimeUtc))
             .Chunk(10);
 
         foreach (var chunk in filesInChunksOfTen)

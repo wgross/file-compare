@@ -10,4 +10,12 @@ public class FileHash
 
     public FileStorage Storage { get; set; }
     public int StorageId { get; set; }
+
+    public long Length { get; set; }
+
+    public DateTime CreationTimeUtc { get; set; }
+
+    public DateTime LastAccessTimeUtc { get; set; }
+
+    public DateTime LastWriteTimeUtc { get; set; }
 }

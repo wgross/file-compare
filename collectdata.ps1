@@ -25,7 +25,12 @@ process {
                 Host     = $env:ComputerName
                 Name     = $_.Name
                 FullName = $relativePath
-                Hash     = (Get-FileHash $_).Hash 
+                Hash     = (Get-FileHash $_).Hash
+                Updated  = Get-Date -AsUTC
+                Length  = $_.Length
+                CreationTimeUtc = $_.CreationTimeUtc
+                LastAccessTimeUtc = $_.LastAccessTimeUtc
+                LastWriteTimeUtc = $_.LastWriteTimeUtc
             }
 
             $files += $file
