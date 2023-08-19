@@ -7,18 +7,18 @@ builder.Services.AddDbContext<FileDbContext>(options => options.UseSqlite(builde
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+if (!builder.Environment.IsDevelopment())
+{
+    // attach to linux systemd lifecycle management
+    builder.Host.UseSystemd();
+};
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.Urls.Add("http://localhost:5000");
-app.Urls.Add("http://GGAMEDESK-2:5000");
-app.Urls.Add("http://192.168.178.61:5000");
+app.Urls.Add("http://0.0.0.0:5000");
 
 app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
 app.MapGetFiles();

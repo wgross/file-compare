@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileCompare.Client\FileCompare.Client.csproj" />
+    <ProjectReference Include="..\FileCompare.Dto\FileCompare.Dto.csproj" />
   </ItemGroup>
 
 </Project>

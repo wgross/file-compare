@@ -38,7 +38,9 @@ process {
                 
                     Invoke-RestMethod @request
 
+                    $files | Select-Object Name
                     $files = @()
+
                 }
                 catch {
                     $_ | Write-Error
@@ -54,6 +56,8 @@ process {
                 $request | ConvertTo-Json -Depth 3 | Write-Verbose
                 
                 Invoke-RestMethod @request
+
+                $files | Select-Object Name
             }
             catch {
                 $_ | Write-Error

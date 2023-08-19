@@ -1,0 +1,15 @@
+[Unit] 
+Description=File Compare Backend
+After=network.target 
+
+[Service] 
+Type=notify 
+WorkingDirectory=/home/pi/file-compare-service
+ExecStart=/home/pi/file-compare-service/FileCompare.Service
+SyslogIdentifier=FileCompareSvc
+Restart=always 
+RestartSec=5
+User=pi 
+
+[Install] 
+WantedBy=multi-user.target
