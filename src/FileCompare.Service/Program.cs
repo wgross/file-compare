@@ -24,6 +24,7 @@ app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
 app.MapGetFiles();
 app.MapGetDifferences();
 app.MapGetDuplicates();
+app.MapGetSingletons();
 app.MapAddFiles();
 
 var context = app.Services

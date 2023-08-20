@@ -5,7 +5,10 @@ param(
     $Path,
 
     [Parameter()]
-    $Uri = "http://192.168.178.61:5000/files"
+    $Uri = "http://pi-plex:5000/files",
+
+    [Parameter()]
+    [int]$BatchSize = 10
 )
 process {
     $PWD | Write-Verbose
@@ -17,7 +20,7 @@ process {
             ContentType = "application/json;charset=UTF-16"
         }
 
-        Get-ChildItem -Path $Path -File -Recurse | ForEach-Object {
+        Get-ChildItem -Path $Path -File -Recurse | Where-Object FullName -notlike "*\.*" | ForEach-Object {
             $relativePath = $_ | Resolve-Path -Relative
             $relativePath | Write-Verbose
  
@@ -35,10 +38,10 @@ process {
 
             $files += $file
 
-            if ($files.Length -eq 10) {
+            if ($files.Length -eq $BatchSize) {
                 try {
                     "Uploading.." | Write-Verbose
-                    $request.Body = $files | ConvertTo-Json -Depth 10
+                    $request.Body = $files | ConvertTo-Json -Depth 5
                     $request | ConvertTo-Json -Depth 3 | Write-Verbose
                 
                     Invoke-RestMethod @request
@@ -57,7 +60,7 @@ process {
         if ($files.Length -gt 0) {
             try {
                 "Uploading remainder.." | Write-Verbose
-                $request.Body = $files | ConvertTo-Json -Depth 10
+                $request.Body = $files | ConvertTo-Json -Depth 5
                 $request | ConvertTo-Json -Depth 3 | Write-Verbose
                 
                 Invoke-RestMethod @request

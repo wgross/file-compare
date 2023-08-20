@@ -18,6 +18,7 @@ public static class Endpoints
             join f in dbx.Files on fh.FileId equals f.Id
             join s in dbx.FileStorages on fh.StorageId equals s.Id
             group fh by new { fh.FileId } into fhg
+            // has multiple hashes but some  are different
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() > 1
             select new FileComparisonDto(
                 fhg.First().File.Name,
@@ -40,6 +41,7 @@ public static class Endpoints
             join f in dbx.Files on fh.FileId equals f.Id
             join s in dbx.FileStorages on fh.StorageId equals s.Id
             group fh by new { fh.FileId } into fhg
+            // has multiple hashes but all hashes are the identical
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() == 1
             select new FileComparisonDto(
                 fhg.First().File.Name,
@@ -57,6 +59,36 @@ public static class Endpoints
     }
 
     #endregion GetDuplicates: GET /files/duplicates
+
+    #region GetSingletons: GET /files/singletons
+
+    public static RouteHandlerBuilder MapGetSingletons(this WebApplication app) => app.MapGet("/files/singletons", GetSingletons);
+
+    private static IResult GetSingletons([FromServices] FileDbContext dbx)
+    {
+        var fileHashGroups =
+           from fh in dbx.FileHashes
+           join f in dbx.Files on fh.FileId equals f.Id
+           join s in dbx.FileStorages on fh.StorageId equals s.Id
+           group fh by new { fh.FileId } into fhg
+           // has only one hash entry at all
+           where fhg.Count() == 1
+           select new FileComparisonDto(
+               fhg.First().File.Name,
+               fhg.First().File.FullName,
+               fhg.Select(fh => new FileHashDto(
+                   fh.Storage.Host,
+                   fh.Hash,
+                   fh.Updated,
+                   fh.Length,
+                   fh.CreationTimeUtc,
+                   fh.LastAccessTimeUtc,
+                   fh.LastWriteTimeUtc)).ToArray());
+
+        return Results.Ok(fileHashGroups.ToArray());
+    }
+
+    #endregion GetSingletons: GET /files/singletons
 
     #region Get Files: GET /files
 

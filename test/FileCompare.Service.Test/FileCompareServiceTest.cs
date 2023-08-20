@@ -168,4 +168,53 @@ public class FileCompareServiceTest
         Assert.Equal(now.AddHours(2), hash2.LastAccessTimeUtc);
         Assert.Equal(now.AddDays(2), hash2.LastWriteTimeUtc);
     }
+
+    [Fact]
+    public async Task Read_singletons_from_db()
+    {
+        // ARRANGE
+        var now = DateTime.UtcNow;
+        await this.client.AddFilesAsync(new[]
+        {
+            new FileDto("host1", "name", "fullName1", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new FileDto("host2", "name", "fullName2", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+        });
+
+        // ACT
+        var result = await this.client.GetFileSingletonsAsync();
+
+        // ASSERT
+        // duplicates have same hash, other properties are ignored
+        Assert.Equal(2, result.Length);
+
+        var difference = result[0];
+
+        Assert.Equal("name", difference.Name);
+        Assert.Equal("fullName1", difference.FullName);
+        Assert.Single(difference.Hashes);
+
+        var hash1 = difference.Hashes[0];
+        Assert.Equal("host1", hash1.Host);
+        Assert.Equal("hash1", hash1.Hash);
+        Assert.Equal(now.AddMinutes(-1), hash1.Updated);
+        Assert.Equal(1, hash1.Length);
+        Assert.Equal(now, hash1.CreationTimeUtc);
+        Assert.Equal(now.AddHours(1), hash1.LastAccessTimeUtc);
+        Assert.Equal(now.AddDays(1), hash1.LastWriteTimeUtc);
+
+        difference = result[1];
+
+        Assert.Equal("name", difference.Name);
+        Assert.Equal("fullName2", difference.FullName);
+        Assert.Single(difference.Hashes);
+
+        var hash2 = difference.Hashes[0];
+        Assert.Equal("host2", hash2.Host);
+        Assert.Equal("hash1", hash2.Hash);
+        Assert.Equal(now.AddMinutes(-2), hash2.Updated);
+        Assert.Equal(2, hash2.Length);
+        Assert.Equal(now, hash2.CreationTimeUtc);
+        Assert.Equal(now.AddHours(2), hash2.LastAccessTimeUtc);
+        Assert.Equal(now.AddDays(2), hash2.LastWriteTimeUtc);
+    }
 }

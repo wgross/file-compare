@@ -45,4 +45,13 @@ public class FileCompareClient
 
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
+
+    public async Task<FileComparisonDto[]> GetFileSingletonsAsync()
+    {
+        var response = await this.httpClient.GetAsync("/files/singletons");
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
+    }
 }
