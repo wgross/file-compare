@@ -25,6 +25,7 @@ app.MapGetFiles();
 app.MapGetDifferences();
 app.MapGetDuplicates();
 app.MapGetSingletons();
+app.MapDeleteFile();
 app.MapAddFiles();
 
 var context = app.Services

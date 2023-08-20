@@ -4,12 +4,12 @@ using FileCompare.Persistence;
 
 namespace FileCompare.Service.Test;
 
-public class FileCompareServiceTest
+public class FileCompareWebApiTest
 {
     private readonly FileCompareTestHostFactory factory;
     private readonly FileCompareClient client;
 
-    public FileCompareServiceTest()
+    public FileCompareWebApiTest()
     {
         InMemoryDbContextOptionsBuilder.Default.Dispose();
 
@@ -18,7 +18,7 @@ public class FileCompareServiceTest
     }
 
     [Fact]
-    public async Task Read_files_from_DB()
+    public async Task Read_empty_files_from_DB()
     {
         // ACT
         var result = await this.client.GetFilesAsync();
@@ -37,12 +37,13 @@ public class FileCompareServiceTest
         var now = DateTime.UtcNow;
 
         // ACT
-        await this.client.AddFilesAsync(new[] { new FileDto("host", "name", fullName, "hash", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)) });
+        await this.client.AddFilesAsync(new[] { new FileRequestDto("host", "name", fullName, "hash", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)) });
 
         // ASSERT
         var result = await this.client.GetFilesAsync();
 
         Assert.Single(result!);
+        Assert.NotEqual(0, result.First().Id);
         Assert.Equal("host", result.First().Host);
         Assert.Equal("name", result.First().Name);
         Assert.Equal("fullName", result.First().FullName);
@@ -66,14 +67,15 @@ public class FileCompareServiceTest
         // ACT
         await this.client.AddFilesAsync(new[]
         {
-            new FileDto("host", "name", "nomatch", "hash", now, 1, now, now,now),
-            new FileDto("host", "name", fullName, "hash",now.AddMinutes(-1), 1,now, now.AddHours(1), now.AddDays(1))
+            new FileRequestDto("host", "name", "nomatch", "hash", now, 1, now, now,now),
+            new FileRequestDto("host", "name", fullName, "hash",now.AddMinutes(-1), 1,now, now.AddHours(1), now.AddDays(1))
         });
 
         // ASSERT
         var result = await this.client.GetFilesAsync(path: "full");
 
         Assert.Single(result!);
+        Assert.NotEqual(0, result.First().Id);
         Assert.Equal("host", result.First().Host);
         Assert.Equal("name", result.First().Name);
         Assert.Equal("full/name", result.First().FullName);
@@ -93,8 +95,8 @@ public class FileCompareServiceTest
 
         await this.client.AddFilesAsync(new[]
         {
-            new FileDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileDto("host2", "name", "fullName", "hash2",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new FileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new FileRequestDto("host2", "name", "fullName", "hash2",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
         });
 
         // ACT
@@ -104,6 +106,7 @@ public class FileCompareServiceTest
         Assert.Single(result!);
         var difference = result.First();
 
+        Assert.NotEqual(0, difference.Id);
         Assert.Equal("name", difference.Name);
         Assert.Equal("fullName", difference.FullName);
         Assert.Equal(2, difference.Hashes.Length);
@@ -134,8 +137,8 @@ public class FileCompareServiceTest
         var now = DateTime.UtcNow;
         await this.client.AddFilesAsync(new[]
         {
-            new FileDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileDto("host2", "name", "fullName", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new FileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new FileRequestDto("host2", "name", "fullName", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
         });
 
         // ACT
@@ -144,13 +147,14 @@ public class FileCompareServiceTest
         // ASSERT
         // duplicates have same hash, other properties are ignored
         Assert.Single(result!);
-        var difference = result.First();
+        var duplicate = result.First();
 
-        Assert.Equal("name", difference.Name);
-        Assert.Equal("fullName", difference.FullName);
-        Assert.Equal(2, difference.Hashes.Length);
+        Assert.NotEqual(0, duplicate.Id);
+        Assert.Equal("name", duplicate.Name);
+        Assert.Equal("fullName", duplicate.FullName);
+        Assert.Equal(2, duplicate.Hashes.Length);
 
-        var hash1 = difference.Hashes[0];
+        var hash1 = duplicate.Hashes[0];
         Assert.Equal("host1", hash1.Host);
         Assert.Equal("hash1", hash1.Hash);
         Assert.Equal(now.AddMinutes(-1), hash1.Updated);
@@ -159,7 +163,7 @@ public class FileCompareServiceTest
         Assert.Equal(now.AddHours(1), hash1.LastAccessTimeUtc);
         Assert.Equal(now.AddDays(1), hash1.LastWriteTimeUtc);
 
-        var hash2 = difference.Hashes[1];
+        var hash2 = duplicate.Hashes[1];
         Assert.Equal("host2", hash2.Host);
         Assert.Equal("hash1", hash2.Hash);
         Assert.Equal(now.AddMinutes(-2), hash2.Updated);
@@ -176,8 +180,8 @@ public class FileCompareServiceTest
         var now = DateTime.UtcNow;
         await this.client.AddFilesAsync(new[]
         {
-            new FileDto("host1", "name", "fullName1", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileDto("host2", "name", "fullName2", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new FileRequestDto("host1", "name", "fullName1", "hash1", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)),
+            new FileRequestDto("host2", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2))
         });
 
         // ACT
@@ -187,13 +191,14 @@ public class FileCompareServiceTest
         // duplicates have same hash, other properties are ignored
         Assert.Equal(2, result.Length);
 
-        var difference = result[0];
+        var singleton = result[0];
 
-        Assert.Equal("name", difference.Name);
-        Assert.Equal("fullName1", difference.FullName);
-        Assert.Single(difference.Hashes);
+        Assert.NotEqual(0, singleton.Id);
+        Assert.Equal("name", singleton.Name);
+        Assert.Equal("fullName1", singleton.FullName);
+        Assert.Single(singleton.Hashes);
 
-        var hash1 = difference.Hashes[0];
+        var hash1 = singleton.Hashes[0];
         Assert.Equal("host1", hash1.Host);
         Assert.Equal("hash1", hash1.Hash);
         Assert.Equal(now.AddMinutes(-1), hash1.Updated);
@@ -202,13 +207,13 @@ public class FileCompareServiceTest
         Assert.Equal(now.AddHours(1), hash1.LastAccessTimeUtc);
         Assert.Equal(now.AddDays(1), hash1.LastWriteTimeUtc);
 
-        difference = result[1];
+        singleton = result[1];
 
-        Assert.Equal("name", difference.Name);
-        Assert.Equal("fullName2", difference.FullName);
-        Assert.Single(difference.Hashes);
+        Assert.Equal("name", singleton.Name);
+        Assert.Equal("fullName2", singleton.FullName);
+        Assert.Single(singleton.Hashes);
 
-        var hash2 = difference.Hashes[0];
+        var hash2 = singleton.Hashes[0];
         Assert.Equal("host2", hash2.Host);
         Assert.Equal("hash1", hash2.Hash);
         Assert.Equal(now.AddMinutes(-2), hash2.Updated);
@@ -216,5 +221,22 @@ public class FileCompareServiceTest
         Assert.Equal(now, hash2.CreationTimeUtc);
         Assert.Equal(now.AddHours(2), hash2.LastAccessTimeUtc);
         Assert.Equal(now.AddDays(2), hash2.LastWriteTimeUtc);
+    }
+
+    [Fact]
+    public async Task Add_file_and_delete()
+    {
+        // ARRANGE
+        var now = DateTime.UtcNow;
+
+        await this.client.AddFilesAsync(new[] { new FileRequestDto("host", "name", "fullName", "hash", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)) });
+
+        var file = (await this.client.GetFilesAsync()).Single();
+
+        // ASSERT
+        await this.client.DeleteFileAsync(file.Id);
+
+        // ASSERT
+        Assert.Empty(await this.client.GetFilesAsync());
     }
 }

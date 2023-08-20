@@ -21,11 +21,19 @@ public static class Endpoints
             // has multiple hashes but some  are different
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() > 1
             select new FileComparisonDto(
+                fhg.First().File.Id,
                 fhg.First().File.Name,
                 fhg.First().File.FullName,
-                fhg.Select(fh => new FileHashDto(fh.Storage.Host, fh.Hash, fh.Updated, fh.Length, fh.CreationTimeUtc, fh.LastAccessTimeUtc, fh.LastWriteTimeUtc)).ToArray());
+                fhg.Select(fh => new FileHashDto(
+                    fh.Storage.Host,
+                    fh.Hash,
+                    fh.Updated,
+                    fh.Length,
+                    fh.CreationTimeUtc,
+                    fh.LastAccessTimeUtc,
+                    fh.LastWriteTimeUtc)).ToArray());
 
-        return Results.Ok(fileHashGroups.ToArray());
+        return Results.Ok(fileHashGroups);
     }
 
     #endregion Get Differences: GET /files/differences
@@ -44,6 +52,7 @@ public static class Endpoints
             // has multiple hashes but all hashes are the identical
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() == 1
             select new FileComparisonDto(
+                fhg.First().File.Id,
                 fhg.First().File.Name,
                 fhg.First().File.FullName,
                 fhg.Select(fh => new FileHashDto(
@@ -55,7 +64,7 @@ public static class Endpoints
                     fh.LastAccessTimeUtc,
                     fh.LastWriteTimeUtc)).ToArray());
 
-        return Results.Ok(fileHashGroups.ToArray());
+        return Results.Ok(fileHashGroups);
     }
 
     #endregion GetDuplicates: GET /files/duplicates
@@ -74,6 +83,7 @@ public static class Endpoints
            // has only one hash entry at all
            where fhg.Count() == 1
            select new FileComparisonDto(
+               fhg.First().File.Id,
                fhg.First().File.Name,
                fhg.First().File.FullName,
                fhg.Select(fh => new FileHashDto(
@@ -85,7 +95,7 @@ public static class Endpoints
                    fh.LastAccessTimeUtc,
                    fh.LastWriteTimeUtc)).ToArray());
 
-        return Results.Ok(fileHashGroups.ToArray());
+        return Results.Ok(fileHashGroups);
     }
 
     #endregion GetSingletons: GET /files/singletons
@@ -99,11 +109,12 @@ public static class Endpoints
         ? dbx.Files.Include(f => f.Hashes).ThenInclude(fh => fh.Storage)
         : dbx.Files.Where(f => f.FullName.StartsWith(prefix)).Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
 
-    private static IEnumerable<FileDto> AllFilesMapped(FileDbContext dbx, [FromQuery] string path)
+    private static IEnumerable<FileResponseDto> AllFilesMapped(FileDbContext dbx, string? path)
     {
         foreach (var file in AllFilesExpanded(dbx, path))
             foreach (var hash in file.Hashes)
-                yield return new FileDto(
+                yield return new FileResponseDto(
+                    file.Id,
                     hash.Storage.Host,
                     file.Name,
                     file.FullName,
@@ -124,7 +135,7 @@ public static class Endpoints
 
     public static RouteHandlerBuilder MapAddFiles(this WebApplication app) => app.MapPost("/files", AddFiles);
 
-    private static async Task<IResult> AddFiles([FromServices] FileDbContext dbx, FileDto[] files)
+    private static async Task<IResult> AddFiles([FromServices] FileDbContext dbx, FileRequestDto[] files)
     {
         foreach (var file in files)
             await AddFile(dbx, file);
@@ -132,7 +143,7 @@ public static class Endpoints
         return Results.Ok();
     }
 
-    public static async Task AddFile(FileDbContext dbx, FileDto fileDto)
+    public static async Task AddFile(FileDbContext dbx, FileRequestDto fileDto)
     {
         var storage = UpsertFileStorage(dbx, fileDto);
         var file = UpsertFile(dbx, fileDto);
@@ -154,7 +165,7 @@ public static class Endpoints
         }
     }
 
-    private static FileHash UpsertFileHash(FileDbContext dbx, FileStorage fileStorage, File file, FileDto fileDto)
+    private static FileHash UpsertFileHash(FileDbContext dbx, FileStorage fileStorage, File file, FileRequestDto fileDto)
     {
         var existing = dbx.FileHashes.FirstOrDefault(fh => fh.StorageId == fileStorage.Id && fh.FileId == file.Id);
         if (existing is null)
@@ -170,7 +181,7 @@ public static class Endpoints
         return existing;
     }
 
-    private static File UpsertFile(FileDbContext dbx, FileDto fileDto)
+    private static File UpsertFile(FileDbContext dbx, FileRequestDto fileDto)
     {
         var fullName = CleanupFullName(fileDto.FullName);
         var existing = dbx.Files.FirstOrDefault(fs => fs.FullName.Equals(fullName));
@@ -188,7 +199,7 @@ public static class Endpoints
 
     private static string CleanupFullName(string fullName) => fullName.Replace('\\', '/').Replace("//", "/").TrimStart('.').TrimStart('/');
 
-    private static FileStorage UpsertFileStorage(FileDbContext dbx, FileDto file)
+    private static FileStorage UpsertFileStorage(FileDbContext dbx, FileRequestDto file)
     {
         var existing = dbx.FileStorages.FirstOrDefault(fs => fs.Host.Equals(file.Host));
         if (existing is null)
@@ -200,4 +211,22 @@ public static class Endpoints
     }
 
     #endregion Upsert files in database: POST /files
+
+    #region Deleöte file: DELETE /files/{id}
+
+    public static RouteHandlerBuilder MapDeleteFile(this WebApplication app) => app.MapDelete("/files/{id}", DeleteFile);
+
+    private static async Task<IResult> DeleteFile([FromServices] FileDbContext dbx, [FromRoute] int id)
+    {
+        var file = await dbx.Files.FindAsync(id);
+        if (file is null)
+            return Results.NotFound();
+
+        dbx.Files.Remove(file);
+        await dbx.SaveChangesAsync();
+
+        return Results.Ok();
+    }
+
+    #endregion Deleöte file: DELETE /files/{id}
 }

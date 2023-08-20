@@ -10,7 +10,7 @@ public class FileCompareClient
 
     public FileCompareClient(HttpClient httpClient) => this.httpClient = httpClient;
 
-    public async Task<FileDto[]> GetFilesAsync(string? path = null)
+    public async Task<FileResponseDto[]> GetFilesAsync(string? path = null)
     {
         var response = string.IsNullOrEmpty(path)
             ? await this.httpClient.GetAsync("/files")
@@ -18,7 +18,7 @@ public class FileCompareClient
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<FileDto[]>() ?? Array.Empty<FileDto>();
+        return await response.Content.ReadFromJsonAsync<FileResponseDto[]>() ?? Array.Empty<FileResponseDto>();
     }
 
     public async Task<FileComparisonDto[]> GetFileDifferencesAsync()
@@ -30,7 +30,7 @@ public class FileCompareClient
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
 
-    public async Task AddFilesAsync(FileDto[] files)
+    public async Task AddFilesAsync(FileRequestDto[] files)
     {
         var response = await this.httpClient.PostAsJsonAsync("/files", files);
 
@@ -54,4 +54,6 @@ public class FileCompareClient
 
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
+
+    public async Task DeleteFileAsync(int id) => await this.httpClient.DeleteAsync($"/files/{id}");
 }

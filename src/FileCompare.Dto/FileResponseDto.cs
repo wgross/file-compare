@@ -1,6 +1,7 @@
 ﻿namespace FileCompare.Dto;
 
-public record FileDto(
+public record FileResponseDto(
+    int Id,
     string Host,
     string Name,
     string FullName,
