@@ -82,18 +82,17 @@ public static class Endpoints
            group fh by new { fh.FileId } into fhg
            // has only one hash entry at all
            where fhg.Count() == 1
-           select new FileComparisonDto(
-               fhg.First().File.Id,
-               fhg.First().File.Name,
-               fhg.First().File.FullName,
-               fhg.Select(fh => new FileHashDto(
-                   fh.Storage.Host,
-                   fh.Hash,
-                   fh.Updated,
-                   fh.Length,
-                   fh.CreationTimeUtc,
-                   fh.LastAccessTimeUtc,
-                   fh.LastWriteTimeUtc)).ToArray());
+           select new FileResponseDto(
+                fhg.First().File.Id,
+                fhg.First().Storage.Host,
+                fhg.First().File.Name,
+                fhg.First().File.FullName,
+                fhg.First().Hash,
+                fhg.First().File.Hashes.First().Updated,
+                fhg.First().Length,
+                fhg.First().CreationTimeUtc,
+                fhg.First().LastAccessTimeUtc,
+                fhg.First().LastWriteTimeUtc);
 
         return Results.Ok(fileHashGroups);
     }

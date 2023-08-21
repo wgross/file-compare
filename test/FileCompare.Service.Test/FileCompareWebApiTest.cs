@@ -196,31 +196,13 @@ public class FileCompareWebApiTest
         Assert.NotEqual(0, singleton.Id);
         Assert.Equal("name", singleton.Name);
         Assert.Equal("fullName1", singleton.FullName);
-        Assert.Single(singleton.Hashes);
-
-        var hash1 = singleton.Hashes[0];
-        Assert.Equal("host1", hash1.Host);
-        Assert.Equal("hash1", hash1.Hash);
-        Assert.Equal(now.AddMinutes(-1), hash1.Updated);
-        Assert.Equal(1, hash1.Length);
-        Assert.Equal(now, hash1.CreationTimeUtc);
-        Assert.Equal(now.AddHours(1), hash1.LastAccessTimeUtc);
-        Assert.Equal(now.AddDays(1), hash1.LastWriteTimeUtc);
-
-        singleton = result[1];
-
-        Assert.Equal("name", singleton.Name);
-        Assert.Equal("fullName2", singleton.FullName);
-        Assert.Single(singleton.Hashes);
-
-        var hash2 = singleton.Hashes[0];
-        Assert.Equal("host2", hash2.Host);
-        Assert.Equal("hash1", hash2.Hash);
-        Assert.Equal(now.AddMinutes(-2), hash2.Updated);
-        Assert.Equal(2, hash2.Length);
-        Assert.Equal(now, hash2.CreationTimeUtc);
-        Assert.Equal(now.AddHours(2), hash2.LastAccessTimeUtc);
-        Assert.Equal(now.AddDays(2), hash2.LastWriteTimeUtc);
+        Assert.Equal("host1", singleton.Host);
+        Assert.Equal("hash1", singleton.Hash);
+        Assert.Equal(now.AddMinutes(-1), singleton.Updated);
+        Assert.Equal(1, singleton.Length);
+        Assert.Equal(now, singleton.CreationTimeUtc);
+        Assert.Equal(now.AddHours(1), singleton.LastAccessTimeUtc);
+        Assert.Equal(now.AddDays(1), singleton.LastWriteTimeUtc);
     }
 
     [Fact]

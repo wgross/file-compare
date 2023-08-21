@@ -46,13 +46,13 @@ public class FileCompareClient
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
 
-    public async Task<FileComparisonDto[]> GetFileSingletonsAsync()
+    public async Task<FileResponseDto[]> GetFileSingletonsAsync()
     {
         var response = await this.httpClient.GetAsync("/files/singletons");
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
+        return await response.Content.ReadFromJsonAsync<FileResponseDto[]>() ?? Array.Empty<FileResponseDto>();
     }
 
     public async Task DeleteFileAsync(int id) => await this.httpClient.DeleteAsync($"/files/{id}");
