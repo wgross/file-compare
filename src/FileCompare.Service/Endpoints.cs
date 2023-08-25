@@ -1,22 +1,35 @@
 ﻿using FileCompare.Dto;
-using FileCompare.Model;
 using FileCompare.Persistence;
+using FileCompare.Service.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using File = FileCompare.Model.File;
 
 public static class Endpoints
 {
-    #region Get Differences: GET /files/differences
+    #region Get Catalogs: GET catalogs
 
-    public static RouteHandlerBuilder MapGetDifferences(this WebApplication app) => app.MapGet("/files/differences", GetDifferences);
+    public static RouteHandlerBuilder MapGetCatalogs(this WebApplication app) => app.MapGet("catalogs", GetCatalogs);
 
-    private static IResult GetDifferences([FromServices] FileDbContext dbx)
+    private static async Task<IResult> GetCatalogs([FromServices] FileCatalogService fileCatalog)
+    {
+        var catalogs = await fileCatalog.GetCatalogsAsync();
+
+        return Results.Ok(catalogs.Select(c => new FileCatalogDto(Name: c.Name)));
+    }
+
+    #endregion Get Catalogs: GET catalogs
+
+    #region Get Differences: GET catalogs/{catalogName}/files/differences
+
+    public static RouteHandlerBuilder MapGetDifferences(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files/differences", GetDifferences);
+
+    private static IResult GetDifferences([FromServices] FileDbContext dbx, [FromRoute] string catalogName)
     {
         var fileHashGroups =
             from fh in dbx.FileHashes
             join f in dbx.Files on fh.FileId equals f.Id
             join s in dbx.FileStorages on fh.StorageId equals s.Id
+            join c in dbx.FileCatalogs on f.CatalogId equals c.Id
+            where c.Name.Equals(catalogName)
             group fh by new { fh.FileId } into fhg
             // has multiple hashes but some  are different
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() > 1
@@ -36,18 +49,20 @@ public static class Endpoints
         return Results.Ok(fileHashGroups);
     }
 
-    #endregion Get Differences: GET /files/differences
+    #endregion Get Differences: GET catalogs/{catalogName}/files/differences
 
-    #region GetDuplicates: GET /files/duplicates
+    #region Get Duplicates: GET catalogs/{catalogName}/files/duplicates
 
-    public static RouteHandlerBuilder MapGetDuplicates(this WebApplication app) => app.MapGet("/files/duplicates", GetDuplicates);
+    public static RouteHandlerBuilder MapGetDuplicates(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files/duplicates", GetDuplicates);
 
-    private static IResult GetDuplicates([FromServices] FileDbContext dbx)
+    private static IResult GetDuplicates([FromServices] FileDbContext dbx, [FromRoute] string catalogName)
     {
         var fileHashGroups =
             from fh in dbx.FileHashes
             join f in dbx.Files on fh.FileId equals f.Id
             join s in dbx.FileStorages on fh.StorageId equals s.Id
+            join c in dbx.FileCatalogs on f.CatalogId equals c.Id
+            where c.Name.Equals(catalogName)
             group fh by new { fh.FileId } into fhg
             // has multiple hashes but all hashes are the identical
             where fhg.Count() > 1 && fhg.Select(fhg => fhg.Hash).Distinct().Count() == 1
@@ -67,18 +82,20 @@ public static class Endpoints
         return Results.Ok(fileHashGroups);
     }
 
-    #endregion GetDuplicates: GET /files/duplicates
+    #endregion Get Duplicates: GET catalogs/{catalogName}/files/duplicates
 
-    #region GetSingletons: GET /files/singletons
+    #region Get Singletons: GET catalogs/{catalogName}/files/singletons
 
-    public static RouteHandlerBuilder MapGetSingletons(this WebApplication app) => app.MapGet("/files/singletons", GetSingletons);
+    public static RouteHandlerBuilder MapGetSingletons(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files/singletons", GetSingletons);
 
-    private static IResult GetSingletons([FromServices] FileDbContext dbx)
+    private static IResult GetSingletons([FromServices] FileDbContext dbx, [FromRoute] string catalogName)
     {
         var fileHashGroups =
            from fh in dbx.FileHashes
            join f in dbx.Files on fh.FileId equals f.Id
            join s in dbx.FileStorages on fh.StorageId equals s.Id
+           join c in dbx.FileCatalogs on f.CatalogId equals c.Id
+           where c.Name == catalogName
            group fh by new { fh.FileId } into fhg
            // has only one hash entry at all
            where fhg.Count() == 1
@@ -97,20 +114,15 @@ public static class Endpoints
         return Results.Ok(fileHashGroups);
     }
 
-    #endregion GetSingletons: GET /files/singletons
+    #endregion Get Singletons: GET catalogs/{catalogName}/files/singletons
 
-    #region Get Files: GET /files
+    #region Get Files: GET catalogs/{catalogName}/files
 
-    public static RouteHandlerBuilder MapGetFiles(this WebApplication app) => app.MapGet("/files", GetFiles);
+    public static RouteHandlerBuilder MapGetFiles(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files", GetFiles);
 
-    private static IQueryable<File> AllFilesExpanded(FileDbContext dbx, string prefix)
-        => string.IsNullOrEmpty(prefix)
-        ? dbx.Files.Include(f => f.Hashes).ThenInclude(fh => fh.Storage)
-        : dbx.Files.Where(f => f.FullName.StartsWith(prefix)).Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
-
-    private static IEnumerable<FileResponseDto> AllFilesMapped(FileDbContext dbx, string? path)
+    private static IEnumerable<FileResponseDto> MapAllFiles(FileCatalogService fileCatalog, string catalogName, string? path)
     {
-        foreach (var file in AllFilesExpanded(dbx, path))
+        foreach (var file in fileCatalog.GetAllFiles(catalogName, path))
             foreach (var hash in file.Hashes)
                 yield return new FileResponseDto(
                     file.Id,
@@ -125,97 +137,30 @@ public static class Endpoints
                     hash.LastWriteTimeUtc);
     }
 
-    private static IResult GetFiles([FromServices] FileDbContext dbx, [FromQuery] string? path)
-        => Results.Ok(AllFilesMapped(dbx, path).ToArray());
+    private static IResult GetFiles([FromServices] FileCatalogService fileCatalog, [FromRoute] string catalogName, [FromQuery] string? path)
+        => Results.Ok(MapAllFiles(fileCatalog, catalogName, path).ToArray());
 
-    #endregion Get Files: GET /files
+    #endregion Get Files: GET catalogs/{catalogName}/files
 
-    #region Upsert files in database: POST /files
+    #region Upsert files in database: POST catalogs/{catalogName}/files
 
-    public static RouteHandlerBuilder MapAddFiles(this WebApplication app) => app.MapPost("/files", AddFiles);
+    public static RouteHandlerBuilder MapAddFiles(this WebApplication app) => app.MapPost("catalogs/{catalogName}/files", AddFiles);
 
-    private static async Task<IResult> AddFiles([FromServices] FileDbContext dbx, FileRequestDto[] files)
+    private static async Task<IResult> AddFiles([FromServices] FileCatalogService fileCatalog, [FromRoute] string catalogName, FileRequestDto[] files)
     {
         foreach (var file in files)
-            await AddFile(dbx, file);
+            await fileCatalog.AddFileAsync(catalogName, file);
 
         return Results.Ok();
     }
 
-    public static async Task AddFile(FileDbContext dbx, FileRequestDto fileDto)
-    {
-        var storage = UpsertFileStorage(dbx, fileDto);
-        var file = UpsertFile(dbx, fileDto);
+    #endregion Upsert files in database: POST catalogs/{catalogName}/files
 
-        await dbx.SaveChangesAsync();
+    #region Delete file: DELETE catalogs/{catalogName}/files/{id}
 
-        var fileHash = UpsertFileHash(dbx, storage, file, fileDto);
+    public static RouteHandlerBuilder MapDeleteFile(this WebApplication app) => app.MapDelete("catalogs/{catalogName}/files/{id}", DeleteFile);
 
-        if (fileHash.Hash != fileDto.Hash)
-        {
-            fileHash.Hash = fileDto.Hash;
-            fileHash.Updated = fileDto.Updated;
-            fileHash.Length = fileDto.Length;
-            fileHash.CreationTimeUtc = fileDto.CreationTimeUtc;
-            fileHash.LastAccessTimeUtc = fileDto.LastAccessTimeUtc;
-            fileHash.LastWriteTimeUtc = fileDto.LastWriteTimeUtc;
-
-            await dbx.SaveChangesAsync();
-        }
-    }
-
-    private static FileHash UpsertFileHash(FileDbContext dbx, FileStorage fileStorage, File file, FileRequestDto fileDto)
-    {
-        var existing = dbx.FileHashes.FirstOrDefault(fh => fh.StorageId == fileStorage.Id && fh.FileId == file.Id);
-        if (existing is null)
-        {
-            existing = new FileHash
-            {
-                File = file,
-                Storage = fileStorage,
-            };
-            dbx.FileHashes.Add(existing);
-        }
-
-        return existing;
-    }
-
-    private static File UpsertFile(FileDbContext dbx, FileRequestDto fileDto)
-    {
-        var fullName = CleanupFullName(fileDto.FullName);
-        var existing = dbx.Files.FirstOrDefault(fs => fs.FullName.Equals(fullName));
-        if (existing is null)
-        {
-            existing = new File
-            {
-                Name = fileDto.Name,
-                FullName = fullName,
-            };
-            dbx.Files.Add(existing);
-        }
-        return existing;
-    }
-
-    private static string CleanupFullName(string fullName) => fullName.Replace('\\', '/').Replace("//", "/").TrimStart('.').TrimStart('/');
-
-    private static FileStorage UpsertFileStorage(FileDbContext dbx, FileRequestDto file)
-    {
-        var existing = dbx.FileStorages.FirstOrDefault(fs => fs.Host.Equals(file.Host));
-        if (existing is null)
-        {
-            existing = new FileStorage { Host = file.Host };
-            dbx.FileStorages.Add(existing);
-        }
-        return existing;
-    }
-
-    #endregion Upsert files in database: POST /files
-
-    #region Deleöte file: DELETE /files/{id}
-
-    public static RouteHandlerBuilder MapDeleteFile(this WebApplication app) => app.MapDelete("/files/{id}", DeleteFile);
-
-    private static async Task<IResult> DeleteFile([FromServices] FileDbContext dbx, [FromRoute] int id)
+    private static async Task<IResult> DeleteFile([FromServices] FileDbContext dbx, [FromRoute] string catalogName, [FromRoute] int id)
     {
         var file = await dbx.Files.FindAsync(id);
         if (file is null)
@@ -227,5 +172,5 @@ public static class Endpoints
         return Results.Ok();
     }
 
-    #endregion Deleöte file: DELETE /files/{id}
+    #endregion Delete file: DELETE catalogs/{catalogName}/files/{id}
 }

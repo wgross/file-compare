@@ -11,7 +11,7 @@ public class Program
 {
     private static readonly SHA256 hash = SHA256.Create();
 
-    public static async Task<int> Main(DirectoryInfo path)
+    public static async Task<int> Main(string catalogName, DirectoryInfo path)
     {
         System.Console.WriteLine(path.FullName);
 
@@ -40,7 +40,7 @@ public class Program
         {
             System.Console.WriteLine(string.Join(",", chunk.Select(x => x.Name)));
 
-            await client.AddFilesAsync(chunk);
+            await client.AddFilesAsync(catalogName,  chunk);
         }
 
         return 0;

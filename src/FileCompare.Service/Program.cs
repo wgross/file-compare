@@ -1,9 +1,11 @@
 using FileCompare.Persistence;
+using FileCompare.Service.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder();
 
 builder.Services.AddDbContext<FileDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<FileCatalogService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -17,10 +19,10 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.Urls.Add("http://0.0.0.0:5000");
 
 app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
+app.MapGetCatalogs();
 app.MapGetFiles();
 app.MapGetDifferences();
 app.MapGetDuplicates();
@@ -29,8 +31,7 @@ app.MapDeleteFile();
 app.MapAddFiles();
 
 var context = app.Services
-    .CreateScope().ServiceProvider
-    .GetRequiredService<FileDbContext>()
+    .CreateScope().ServiceProvider.GetRequiredService<FileDbContext>()
     .Database.EnsureCreated();
 
 app.Run();

@@ -10,50 +10,59 @@ public class FileCompareClient
 
     public FileCompareClient(HttpClient httpClient) => this.httpClient = httpClient;
 
-    public async Task<FileResponseDto[]> GetFilesAsync(string? path = null)
+    public async Task<FileResponseDto[]> GetFilesAsync(string catalogName, string? path = null)
     {
         var response = string.IsNullOrEmpty(path)
-            ? await this.httpClient.GetAsync("/files")
-            : await this.httpClient.GetAsync($"/files?path={HttpUtility.UrlEncode(path)}");
+            ? await this.httpClient.GetAsync($"catalogs/{catalogName}/files")
+            : await this.httpClient.GetAsync($"catalogs/{catalogName}/files?path={HttpUtility.UrlEncode(path)}");
 
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<FileResponseDto[]>() ?? Array.Empty<FileResponseDto>();
     }
 
-    public async Task<FileComparisonDto[]> GetFileDifferencesAsync()
+    public async Task<FileComparisonDto[]> GetFileDifferencesAsync(string catalogName)
     {
-        var response = await this.httpClient.GetAsync("/files/differences");
+        var response = await this.httpClient.GetAsync($"catalogs/{catalogName}/files/differences");
 
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
 
-    public async Task AddFilesAsync(FileRequestDto[] files)
+    public async Task AddFilesAsync(string catalogName, FileRequestDto[] files)
     {
-        var response = await this.httpClient.PostAsJsonAsync("/files", files);
+        var response = await this.httpClient.PostAsJsonAsync($"catalogs/{catalogName}/files", files);
 
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<FileComparisonDto[]> GetFileDuplicatesAsync()
+    public async Task<FileComparisonDto[]> GetFileDuplicatesAsync(string catalogName)
     {
-        var response = await this.httpClient.GetAsync("/files/duplicates");
+        var response = await this.httpClient.GetAsync($"catalogs/{catalogName}/files/duplicates");
 
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
 
-    public async Task<FileResponseDto[]> GetFileSingletonsAsync()
+    public async Task<FileResponseDto[]> GetFileSingletonsAsync(string catalogName)
     {
-        var response = await this.httpClient.GetAsync("/files/singletons");
+        var response = await this.httpClient.GetAsync($"catalogs/{catalogName}/files/singletons");
 
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<FileResponseDto[]>() ?? Array.Empty<FileResponseDto>();
     }
 
-    public async Task DeleteFileAsync(int id) => await this.httpClient.DeleteAsync($"/files/{id}");
+    public async Task DeleteFileAsync(string catalogName, int id) => await this.httpClient.DeleteAsync($"catalogs/{catalogName}/files/{id}");
+
+    public async Task<FileCatalogDto[]> GetCatalogsAsync()
+    {
+        var response = await this.httpClient.GetAsync("catalogs");
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<FileCatalogDto[]>() ?? Array.Empty<FileCatalogDto>();
+    }
 }
