@@ -1,5 +1,6 @@
 ﻿using FileCompare.Client;
 using FileCompare.Dto;
+using Serilog;
 using System.Security.Cryptography;
 
 namespace FileCompare.Console;
@@ -9,54 +10,146 @@ namespace FileCompare.Console;
 /// </summary>
 public class Program
 {
-    private static readonly SHA256 hash = SHA256.Create();
+    private static readonly MD5 hash = MD5.Create();
 
-    public static async Task<int> Main(string catalogName, DirectoryInfo path)
+    static Program()
     {
-        System.Console.WriteLine(path.FullName);
+        Log.Logger = new LoggerConfiguration()
+          // write logging message template expanded to plain text
+          .WriteTo.File(
+              path: @"logs\fccli-.log",
+              outputTemplate: "[{Timestamp:yyyMMdd-HH:mm:ss.fff}][{Level:u3}][{SourceContext}]:{Message:lj}{NewLine}{Exception}",
+              rollingInterval: RollingInterval.Day)
+          .WriteTo.Console()
+          .CreateLogger();
+    }
 
-        var client = new FileCompareClient(new HttpClient
+    public static async Task<int> Main(string catalog, DirectoryInfo path, string uri)
+    {
+        Log.Logger.Information("Updating directory: {directory} in the catalog {catalog} at {uri}",
+            path.FullName,
+            catalog,
+            uri);
+
+        // Render the table to the console
+
+        var currentDirectory = Directory.GetCurrentDirectory();
+        try
         {
-            BaseAddress = new("http://localhost:5000")
-        });
+            Directory.SetCurrentDirectory(path.FullName);
 
-        var filesInChunksOfTen = Directory.EnumerateFiles(path.FullName, "*", SearchOption.AllDirectories)
-            .Select(x => new FileInfo(x))
-            .Select(x => (File: x, Hash: HashFile(x)))
-            .Where(x => x is { Hash: { Ok: true, Hash: not null } })
-            .Select(x => new UpsertFileRequestDto(
-                Environment.MachineName, // host
-                x.File.Name,
-                Path.GetRelativePath(Environment.CurrentDirectory, x.File.FullName), // FulllName
-                x.Hash.Hash!, // Hash is null is excluded above
-                DateTime.UtcNow, // updated
-                x.File.Length,
-                x.File.CreationTimeUtc,
-                x.File.LastAccessTimeUtc,
-                x.File.LastWriteTimeUtc))
-            .Chunk(10);
+            var client = new FileCatalogClient(new HttpClient
+            {
+                BaseAddress = new(uri)
+            });
 
-        foreach (var chunk in filesInChunksOfTen)
+            await ProcessDirectoryAsCatalog(catalog, path, client);
+        }
+        finally
         {
-            System.Console.WriteLine(string.Join(",", chunk.Select(x => x.Name)));
+            Directory.SetCurrentDirectory(currentDirectory);
+        }
+        return 0;
+    }
 
-            await client.AddFilesAsync(catalogName,  chunk);
+    private static async Task ProcessDirectoryAsCatalog(string catalogName, DirectoryInfo path, FileCatalogClient client)
+    {
+        var chunk = new List<UpsertFileRequestDto>();
+
+        await foreach (var modifiedFile in HashModifiedFilesInCatalog(catalogName, path, client))
+        {
+            chunk.Add(modifiedFile);
+
+            Log.Logger.Debug("Updating: {file}", modifiedFile.FullName);
+
+            if (chunk.Count > 10)
+            {
+                await client.AddFilesAsync(catalogName, chunk.ToArray());
+
+                foreach (var file in chunk)
+                    Log.Logger.Information("Upserted: {file}", file.FullName);
+
+                chunk.Clear();
+            }
         }
 
-        return 0;
+        if (chunk.Any())
+        {
+            await client.AddFilesAsync(catalogName, chunk.ToArray());
+
+            foreach (var file in chunk)
+                Log.Logger.Information("Upserted: {file}", file.FullName);
+        }
+    }
+
+    private static async IAsyncEnumerable<UpsertFileRequestDto> HashModifiedFilesInCatalog(string catalogName, DirectoryInfo path, FileCatalogClient fileCatalogClient)
+    {
+        await foreach (var modifiedFile in FindModifiedFilesInCatalog(catalogName, path, fileCatalogClient))
+        {
+            var hash = HashFile(modifiedFile);
+
+            if (hash.Ok)
+            {
+                yield return new UpsertFileRequestDto(
+                    Host: Environment.MachineName,
+                    Name: modifiedFile.Name,
+                    FullName: Path.GetRelativePath(Environment.CurrentDirectory, modifiedFile.FullName),
+                    Hash: hash.Hash!, // Hash is null is excluded above
+                    Updated: DateTime.UtcNow,
+                    Length: modifiedFile.Length,
+                    CreationTimeUtc: modifiedFile.CreationTimeUtc,
+                    LastAccessTimeUtc: modifiedFile.LastAccessTimeUtc,
+                    LastWriteTimeUtc: modifiedFile.LastWriteTimeUtc);
+            }
+        }
+    }
+
+    private static async IAsyncEnumerable<FileInfo> FindModifiedFilesInCatalog(string catalogName, DirectoryInfo path, FileCatalogClient fileCatalogClient)
+    {
+        foreach (var localFile in Directory.EnumerateFiles(path.FullName, "*", SearchOption.AllDirectories).Select(x => new FileInfo(x)))
+        {
+            var fileRelativePath = Path.GetRelativePath(Environment.CurrentDirectory, localFile.FullName);
+
+            var cataloguedFiles = await fileCatalogClient.GetFilesAsync(catalogName, fileRelativePath);
+
+            var cataloguedFile = cataloguedFiles.FirstOrDefault(x => x.Host.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase));
+
+            if (cataloguedFile is null || !MatchLocalToCatalog(localFile, cataloguedFile))
+            {
+                Log.Logger.Debug("File: {file} will be upserted to the catalog.", localFile.FullName);
+
+                yield return localFile;
+            }
+            else Log.Logger.Debug("File: {file} is up-to-date in the catalog.", localFile.FullName);
+        }
+    }
+
+    private static bool MatchLocalToCatalog(FileInfo localFile, FileResponseDto cataloguedFile)
+    {
+        // host and path should already match, I'm interested in the meta data
+        if (localFile.Length != cataloguedFile.Length)
+            return false;
+        if (localFile.CreationTimeUtc != cataloguedFile.CreationTimeUtc)
+            return false;
+        if (localFile.LastWriteTimeUtc != cataloguedFile.LastWriteTimeUtc)
+            return false;
+
+        return true;
     }
 
     private static (bool Ok, string? Hash) HashFile(FileInfo file)
     {
         try
         {
-            using var fileStream = new FileStream(file.FullName, FileMode.Open);
+            Log.Logger.Debug("Hashing file {file}", file.FullName);
+
+            using var fileStream = file.OpenRead();
 
             return (true, BitConverter.ToString(hash.ComputeHash(fileStream)));
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine(ex.Message);
+            Log.Logger.Error(ex, "Error hashing file: {file}", file.FullName);
 
             return (false, null);
         }

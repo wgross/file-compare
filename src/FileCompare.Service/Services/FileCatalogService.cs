@@ -110,7 +110,7 @@ public class FileCatalogService
 
     private IQueryable<File> GetAllFiles(string? prefix) => string.IsNullOrEmpty(prefix)
         ? this.fileDb.Files.Include(f => f.Catalog).Include(f => f.Hashes).ThenInclude(fh => fh.Storage)
-        : this.fileDb.Files.Where(f => f.FullName.StartsWith(prefix)).Include(f => f.Catalog).Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
+        : this.fileDb.Files.Where(f => f.FullName.StartsWith(CleanupFullName(prefix))).Include(f => f.Catalog).Include(f => f.Hashes).ThenInclude(fh => fh.Storage);
 
     public async Task<IEnumerable<FileCatalog>> GetCatalogsAsync() => await this.fileDb.FileCatalogs.ToListAsync();
 }

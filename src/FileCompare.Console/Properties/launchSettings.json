@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "run in notes": {
+      "commandName": "Project",
+      "commandLineArgs": "--catalog notes --path D:\\OneDrive\\Notes --uri http://localhost:5000/",
+      "workingDirectory": "D:\\OneDrive"
+    }
+  }
+}

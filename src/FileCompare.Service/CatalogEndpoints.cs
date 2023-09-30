@@ -2,6 +2,7 @@
 using FileCompare.Persistence;
 using FileCompare.Service.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Web;
 
 public static class CatalogEndpoints
 {
@@ -129,13 +130,15 @@ public static class CatalogEndpoints
 
     #endregion Get Singletons: GET catalogs/{catalogName}/files/singletons
 
-    #region Get Files: GET catalogs/{catalogName}/files
+    #region Get Files: GET catalogs/{catalogName}/files?path={}
 
     private static RouteHandlerBuilder MapGetFiles(this RouteGroupBuilder catalogs) => catalogs.MapGet("{catalogName}/files", GetFiles);
 
     private static IEnumerable<FileResponseDto> MapAllFiles(FileCatalogService fileCatalog, string catalogName, string? path)
     {
-        foreach (var file in fileCatalog.GetAllFiles(catalogName, path))
+        var decodedPath = path is null ? null : HttpUtility.UrlDecode(path);
+
+        foreach (var file in fileCatalog.GetAllFiles(catalogName, decodedPath))
             foreach (var hash in file.Hashes)
                 yield return new FileResponseDto(
                     file.Id,
@@ -153,7 +156,7 @@ public static class CatalogEndpoints
     private static IResult GetFiles([FromServices] FileCatalogService fileCatalog, [FromRoute] string catalogName, [FromQuery] string? path)
         => Results.Ok(MapAllFiles(fileCatalog, catalogName, path).ToArray());
 
-    #endregion Get Files: GET catalogs/{catalogName}/files
+    #endregion Get Files: GET catalogs/{catalogName}/files?path={}
 
     #region Upsert files in database: POST catalogs/{catalogName}/files
 

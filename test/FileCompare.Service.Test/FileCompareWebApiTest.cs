@@ -11,7 +11,7 @@ public class FileCompareWebApiTest
 
     public HttpClient httpClient { get; }
 
-    private readonly FileCompareClient client;
+    private readonly FileCatalogClient client;
 
     public FileCompareWebApiTest()
     {
@@ -64,10 +64,10 @@ public class FileCompareWebApiTest
     }
 
     [Theory]
-    [InlineData("./fullName")]
-    [InlineData("fullName")]
-    [InlineData(".\\fullName")]
-    public async Task Add_file_and_read_again(string fullName)
+    [InlineData("./fullName", "fullName")]
+    [InlineData("fullName", "fullName")]
+    [InlineData(".\\fullName", "fullName")]
+    public async Task Add_file_and_read_again(string fullNameAdd, string fullNameRead)
     {
         // ARRANGE
         var now = DateTime.UtcNow;
@@ -78,7 +78,7 @@ public class FileCompareWebApiTest
             new UpsertFileRequestDto(
                 "host",
                 "name",
-                fullName,
+                fullNameAdd,
                 "hash",
                 now.AddMinutes(-1),
                 1,
@@ -94,7 +94,7 @@ public class FileCompareWebApiTest
         Assert.NotEqual(0, result.First().Id);
         Assert.Equal("host", result.First().Host);
         Assert.Equal("name", result.First().Name);
-        Assert.Equal("fullName", result.First().FullName);
+        Assert.Equal(fullNameRead, result.First().FullName);
         Assert.Equal("hash", result.First().Hash);
         Assert.Equal(now.AddMinutes(-1), result.First().Updated);
         Assert.Equal(1, result.First().Length);
@@ -212,7 +212,7 @@ public class FileCompareWebApiTest
     [InlineData("./full/name")]
     [InlineData("full\\name")]
     [InlineData(".\\full\\name")]
-    public async Task Add_file_and_read_again_with_prefix(string fullName)
+    public async Task Add_file_and_read_again_with_prefix(string fullNameAdd)
     {
         // ARRANGE
         var now = DateTime.UtcNow;
@@ -221,7 +221,7 @@ public class FileCompareWebApiTest
         await this.client.AddFilesAsync("catalog", new[]
         {
             new UpsertFileRequestDto("host", "name", "nomatch", "hash", now, 1, now, now,now),
-            new UpsertFileRequestDto("host", "name", fullName, "hash",now.AddMinutes(-1), 1,now, now.AddHours(1), now.AddDays(1))
+            new UpsertFileRequestDto("host", "name", fullNameAdd, "hash",now.AddMinutes(-1), 1,now, now.AddHours(1), now.AddDays(1))
         });
 
         // ASSERT

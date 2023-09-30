@@ -4,11 +4,11 @@ using System.Web;
 
 namespace FileCompare.Client;
 
-public class FileCompareClient
+public class FileCatalogClient
 {
     private readonly HttpClient httpClient;
 
-    public FileCompareClient(HttpClient httpClient) => this.httpClient = httpClient;
+    public FileCatalogClient(HttpClient httpClient) => this.httpClient = httpClient;
 
     public async Task<FileResponseDto[]> GetFilesAsync(string catalogName, string? path = null)
     {
