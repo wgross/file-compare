@@ -1,6 +1,6 @@
 ﻿namespace FileCompare.Dto;
 
-public record FileRequestDto(
+public record UpsertFileRequestDto(
     string Host,
     string Name,
     string FullName,

@@ -3,11 +3,24 @@ using FileCompare.Persistence;
 using FileCompare.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 
-public static class Endpoints
+public static class CatalogEndpoints
 {
+    public static void MapCatalogsEndpoints(this WebApplication app)
+    {
+        var catalogs = app.MapGroup("/catalogs");
+
+        catalogs.MapGetCatalogs();
+        catalogs.MapGetFiles();
+        catalogs.MapGetDifferences();
+        catalogs.MapGetDuplicates();
+        catalogs.MapGetSingletons();
+        catalogs.MapDeleteFile();
+        catalogs.MapAddFiles();
+    }
+
     #region Get Catalogs: GET catalogs
 
-    public static RouteHandlerBuilder MapGetCatalogs(this WebApplication app) => app.MapGet("catalogs", GetCatalogs);
+    private static RouteHandlerBuilder MapGetCatalogs(this RouteGroupBuilder catalogs) => catalogs.MapGet("", GetCatalogs);
 
     private static async Task<IResult> GetCatalogs([FromServices] FileCatalogService fileCatalog)
     {
@@ -20,7 +33,7 @@ public static class Endpoints
 
     #region Get Differences: GET catalogs/{catalogName}/files/differences
 
-    public static RouteHandlerBuilder MapGetDifferences(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files/differences", GetDifferences);
+    private static RouteHandlerBuilder MapGetDifferences(this RouteGroupBuilder catalogs) => catalogs.MapGet("{catalogName}/files/differences", GetDifferences);
 
     private static IResult GetDifferences([FromServices] FileDbContext dbx, [FromRoute] string catalogName)
     {
@@ -53,7 +66,7 @@ public static class Endpoints
 
     #region Get Duplicates: GET catalogs/{catalogName}/files/duplicates
 
-    public static RouteHandlerBuilder MapGetDuplicates(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files/duplicates", GetDuplicates);
+    private static RouteHandlerBuilder MapGetDuplicates(this RouteGroupBuilder catalogs) => catalogs.MapGet("{catalogName}/files/duplicates", GetDuplicates);
 
     private static IResult GetDuplicates([FromServices] FileDbContext dbx, [FromRoute] string catalogName)
     {
@@ -86,7 +99,7 @@ public static class Endpoints
 
     #region Get Singletons: GET catalogs/{catalogName}/files/singletons
 
-    public static RouteHandlerBuilder MapGetSingletons(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files/singletons", GetSingletons);
+    private static RouteHandlerBuilder MapGetSingletons(this RouteGroupBuilder catalogs) => catalogs.MapGet("{catalogName}/files/singletons", GetSingletons);
 
     private static IResult GetSingletons([FromServices] FileDbContext dbx, [FromRoute] string catalogName)
     {
@@ -118,7 +131,7 @@ public static class Endpoints
 
     #region Get Files: GET catalogs/{catalogName}/files
 
-    public static RouteHandlerBuilder MapGetFiles(this WebApplication app) => app.MapGet("catalogs/{catalogName}/files", GetFiles);
+    private static RouteHandlerBuilder MapGetFiles(this RouteGroupBuilder catalogs) => catalogs.MapGet("{catalogName}/files", GetFiles);
 
     private static IEnumerable<FileResponseDto> MapAllFiles(FileCatalogService fileCatalog, string catalogName, string? path)
     {
@@ -144,9 +157,9 @@ public static class Endpoints
 
     #region Upsert files in database: POST catalogs/{catalogName}/files
 
-    public static RouteHandlerBuilder MapAddFiles(this WebApplication app) => app.MapPost("catalogs/{catalogName}/files", AddFiles);
+    public static RouteHandlerBuilder MapAddFiles(this RouteGroupBuilder catalogs) => catalogs.MapPost("{catalogName}/files", AddFiles);
 
-    private static async Task<IResult> AddFiles([FromServices] FileCatalogService fileCatalog, [FromRoute] string catalogName, FileRequestDto[] files)
+    private static async Task<IResult> AddFiles([FromServices] FileCatalogService fileCatalog, [FromRoute] string catalogName, UpsertFileRequestDto[] files)
     {
         foreach (var file in files)
             await fileCatalog.AddFileAsync(catalogName, file);
@@ -158,7 +171,7 @@ public static class Endpoints
 
     #region Delete file: DELETE catalogs/{catalogName}/files/{id}
 
-    public static RouteHandlerBuilder MapDeleteFile(this WebApplication app) => app.MapDelete("catalogs/{catalogName}/files/{id}", DeleteFile);
+    private static RouteHandlerBuilder MapDeleteFile(this RouteGroupBuilder catalogs) => catalogs.MapDelete("{catalogName}/files/{id}", DeleteFile);
 
     private static async Task<IResult> DeleteFile([FromServices] FileDbContext dbx, [FromRoute] string catalogName, [FromRoute] int id)
     {

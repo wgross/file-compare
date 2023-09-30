@@ -30,7 +30,7 @@ public class FileCompareClient
         return await response.Content.ReadFromJsonAsync<FileComparisonDto[]>() ?? Array.Empty<FileComparisonDto>();
     }
 
-    public async Task AddFilesAsync(string catalogName, FileRequestDto[] files)
+    public async Task AddFilesAsync(string catalogName, UpsertFileRequestDto[] files)
     {
         var response = await this.httpClient.PostAsJsonAsync($"catalogs/{catalogName}/files", files);
 

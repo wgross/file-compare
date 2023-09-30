@@ -24,7 +24,7 @@ public class Program
             .Select(x => new FileInfo(x))
             .Select(x => (File: x, Hash: HashFile(x)))
             .Where(x => x is { Hash: { Ok: true, Hash: not null } })
-            .Select(x => new FileRequestDto(
+            .Select(x => new UpsertFileRequestDto(
                 Environment.MachineName, // host
                 x.File.Name,
                 Path.GetRelativePath(Environment.CurrentDirectory, x.File.FullName), // FulllName

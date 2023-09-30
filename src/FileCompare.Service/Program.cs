@@ -20,15 +20,8 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.Urls.Add("http://0.0.0.0:5000");
-
 app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
-app.MapGetCatalogs();
-app.MapGetFiles();
-app.MapGetDifferences();
-app.MapGetDuplicates();
-app.MapGetSingletons();
-app.MapDeleteFile();
-app.MapAddFiles();
+app.MapCatalogsEndpoints();
 
 var context = app.Services
     .CreateScope().ServiceProvider.GetRequiredService<FileDbContext>()

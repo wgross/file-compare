@@ -15,7 +15,7 @@ public class FileCatalogService
         this.fileDb = fileDb;
     }
 
-    public async Task AddFileAsync(string catalogName, FileRequestDto fileDto)
+    public async Task AddFileAsync(string catalogName, UpsertFileRequestDto fileDto)
     {
         var catalog = this.UpsertFileCatalog(catalogName, fileDto);
         var storage = this.UpsertFileStorage(fileDto, catalog);
@@ -38,7 +38,7 @@ public class FileCatalogService
         }
     }
 
-    private FileCatalog UpsertFileCatalog(string catalogName, FileRequestDto fileDto)
+    private FileCatalog UpsertFileCatalog(string catalogName, UpsertFileRequestDto fileDto)
     {
         catalogName = catalogName.Trim();
         var existing = this.fileDb.FileCatalogs.FirstOrDefault(fc => fc.Name.Equals(catalogName));
@@ -54,7 +54,7 @@ public class FileCatalogService
         return existing;
     }
 
-    private FileHash UpsertFileHash(FileStorage fileStorage, File file, FileRequestDto fileDto)
+    private FileHash UpsertFileHash(FileStorage fileStorage, File file, UpsertFileRequestDto fileDto)
     {
         var existing = this.fileDb.FileHashes.FirstOrDefault(fh => fh.StorageId == fileStorage.Id && fh.FileId == file.Id);
         if (existing is null)
@@ -71,7 +71,7 @@ public class FileCatalogService
         return existing;
     }
 
-    private File UpsertFile(FileRequestDto fileDto, FileCatalog fileCatalog)
+    private File UpsertFile(UpsertFileRequestDto fileDto, FileCatalog fileCatalog)
     {
         var fullName = CleanupFullName(fileDto.FullName);
         var existing = this.fileDb.Files.FirstOrDefault(fs => fs.FullName.Equals(fullName) && fs.CatalogId == fileCatalog.Id);
@@ -90,7 +90,7 @@ public class FileCatalogService
 
     private static string CleanupFullName(string fullName) => fullName.Replace('\\', '/').Replace("//", "/").TrimStart('.').TrimStart('/');
 
-    private FileStorage UpsertFileStorage(FileRequestDto file, FileCatalog fileCatalog)
+    private FileStorage UpsertFileStorage(UpsertFileRequestDto file, FileCatalog fileCatalog)
     {
         var existing = this.fileDb.FileStorages.FirstOrDefault(fs => fs.Host.Equals(file.Host));
         if (existing is null)

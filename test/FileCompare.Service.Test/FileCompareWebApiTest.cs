@@ -45,7 +45,7 @@ public class FileCompareWebApiTest
         // ACT
         await this.client.AddFilesAsync(catalogName, new[]
         {
-            new FileRequestDto(
+            new UpsertFileRequestDto(
                 "host",
                 "name",
                 "fullName",
@@ -75,7 +75,7 @@ public class FileCompareWebApiTest
         // ACT
         await this.client.AddFilesAsync("catalog", new[]
         {
-            new FileRequestDto(
+            new UpsertFileRequestDto(
                 "host",
                 "name",
                 fullName,
@@ -115,7 +115,7 @@ public class FileCompareWebApiTest
         // ACT
         await this.client.AddFilesAsync("catalog1", new[]
         {
-            new FileRequestDto(
+            new UpsertFileRequestDto(
                 "host",
                 "name",
                 fullName,
@@ -128,7 +128,7 @@ public class FileCompareWebApiTest
         });
         await this.client.AddFilesAsync("catalog2", new[]
         {
-            new FileRequestDto(
+            new UpsertFileRequestDto(
                 "host",
                 "name",
                 fullName,
@@ -180,7 +180,7 @@ public class FileCompareWebApiTest
         // ACT
         await this.client.AddFilesAsync("catalog", new[]
         {
-            new FileRequestDto(
+            new UpsertFileRequestDto(
                 "host",
                 "name",
                 "fullName",
@@ -220,8 +220,8 @@ public class FileCompareWebApiTest
         // ACT
         await this.client.AddFilesAsync("catalog", new[]
         {
-            new FileRequestDto("host", "name", "nomatch", "hash", now, 1, now, now,now),
-            new FileRequestDto("host", "name", fullName, "hash",now.AddMinutes(-1), 1,now, now.AddHours(1), now.AddDays(1))
+            new UpsertFileRequestDto("host", "name", "nomatch", "hash", now, 1, now, now,now),
+            new UpsertFileRequestDto("host", "name", fullName, "hash",now.AddMinutes(-1), 1,now, now.AddHours(1), now.AddDays(1))
         });
 
         // ASSERT
@@ -249,14 +249,14 @@ public class FileCompareWebApiTest
         await this.client.AddFilesAsync("catalog1", new[]
         {
             // this file is different at two hosts
-            new FileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileRequestDto("host2", "name", "fullName", "hash2",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new UpsertFileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new UpsertFileRequestDto("host2", "name", "fullName", "hash2",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
         });
         await this.client.AddFilesAsync("catalog2", new[]
         {
             // this file is different at two hosts
-            new FileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileRequestDto("host2", "name", "fullName", "hash2",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new UpsertFileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new UpsertFileRequestDto("host2", "name", "fullName", "hash2",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
         });
         // ACT
         var result1 = await this.client.GetFileDifferencesAsync("catalog1");
@@ -327,14 +327,14 @@ public class FileCompareWebApiTest
         await this.client.AddFilesAsync("catalog1", new[]
         {
             // this file is a duplicat at two hosts
-            new FileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileRequestDto("host2", "name", "fullName", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new UpsertFileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new UpsertFileRequestDto("host2", "name", "fullName", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
         });
         await this.client.AddFilesAsync("catalog2", new[]
         {
             // this file is a duplicate at two hosts
-            new FileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
-            new FileRequestDto("host2", "name", "fullName", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
+            new UpsertFileRequestDto("host1", "name", "fullName", "hash1",now.AddMinutes(-1),1, now, now.AddHours(1), now.AddDays(1)),
+            new UpsertFileRequestDto("host2", "name", "fullName", "hash1",now.AddMinutes(-2),2, now, now.AddHours(2), now.AddDays(2))
         });
 
         // ACT
@@ -407,18 +407,18 @@ public class FileCompareWebApiTest
         await this.client.AddFilesAsync("catalog1", new[]
         {
             // this is a singleton at host1
-            new FileRequestDto("host1", "name", "fullName1", "hash1", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)),
+            new UpsertFileRequestDto("host1", "name", "fullName1", "hash1", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)),
             // this file is at two hosts in the catalog
-            new FileRequestDto("host2", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2)),
-            new FileRequestDto("host3", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2))
+            new UpsertFileRequestDto("host2", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2)),
+            new UpsertFileRequestDto("host3", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2))
         });
         await this.client.AddFilesAsync("catalog2", new[]
         {
             // this is a singleton at host1
-            new FileRequestDto("host1", "name", "fullName1", "hash1", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)),
+            new UpsertFileRequestDto("host1", "name", "fullName1", "hash1", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1)),
             // this file is at two hosts in the catalog
-            new FileRequestDto("host2", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2)),
-            new FileRequestDto("host3", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2))
+            new UpsertFileRequestDto("host2", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2)),
+            new UpsertFileRequestDto("host3", "name", "fullName2", "hash1", now.AddMinutes(-2), 2, now, now.AddHours(2), now.AddDays(2))
         });
 
         // ACT
@@ -467,7 +467,7 @@ public class FileCompareWebApiTest
 
         await this.client.AddFilesAsync("catalog", new[]
         {
-            new FileRequestDto("host", "name", "fullName", "hash", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1))
+            new UpsertFileRequestDto("host", "name", "fullName", "hash", now.AddMinutes(-1), 1, now, now.AddHours(1), now.AddDays(1))
         });
 
         var file = (await this.client.GetFilesAsync("catalog")).Single();
